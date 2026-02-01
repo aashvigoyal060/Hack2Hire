@@ -1,38 +1,79 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import {
+  interviews,
+  messages,
+  type Interview,
+  type InsertInterview,
+  type Message,
+  type InsertMessage,
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, asc } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createInterview(interview: InsertInterview): Promise<Interview>;
+  getInterview(id: number): Promise<Interview | undefined>;
+  updateInterview(id: number, partial: Partial<Interview>): Promise<Interview>;
+  createMessage(message: InsertMessage): Promise<Message>;
+  getMessages(interviewId: number): Promise<Message[]>;
+  updateMessage(id: number, partial: Partial<Message>): Promise<Message>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async createInterview(interview: InsertInterview): Promise<Interview> {
+    const [newInterview] = await db
+      .insert(interviews)
+      .values(interview)
+      .returning();
+    return newInterview;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getInterview(id: number): Promise<Interview | undefined> {
+    const [interview] = await db
+      .select()
+      .from(interviews)
+      .where(eq(interviews.id, id));
+    return interview;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async updateInterview(
+    id: number,
+    partial: Partial<Interview>,
+  ): Promise<Interview> {
+    const [updated] = await db
+      .update(interviews)
+      .set(partial)
+      .where(eq(interviews.id, id))
+      .returning();
+    return updated;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [newMessage] = await db
+      .insert(messages)
+      .values(message)
+      .returning();
+    return newMessage;
+  }
+
+  async getMessages(interviewId: number): Promise<Message[]> {
+    return db
+      .select()
+      .from(messages)
+      .where(eq(messages.interviewId, interviewId))
+      .orderBy(asc(messages.createdAt));
+  }
+
+  async updateMessage(
+    id: number,
+    partial: Partial<Message>,
+  ): Promise<Message> {
+    const [updated] = await db
+      .update(messages)
+      .set(partial)
+      .where(eq(messages.id, id))
+      .returning();
+    return updated;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
