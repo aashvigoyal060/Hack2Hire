@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppHeader } from "@/components/app-header";
+import ApiConfigBanner from "@/components/api-config-banner";
 import LandingPage from "@/pages/LandingPage";
 import InterviewPage from "@/pages/InterviewPage";
 import ReportPage from "@/pages/ReportPage";
@@ -27,6 +28,7 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <div className="min-h-screen bg-background">
+            <ApiConfigBanner />
             <AppHeader />
             <Router />
           </div>
