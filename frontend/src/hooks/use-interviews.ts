@@ -3,17 +3,39 @@ import { api, buildUrl } from "@shared/routes";
 import { type InsertInterview } from "@shared/schema";
 import { apiUrl, parseApiError } from "@/lib/api";
 
+const AI_REQUEST_TIMEOUT_MS = 120_000;
+
 async function apiFetch(url: string, init?: RequestInit) {
+  const isAiStep = url.includes("/next") || url.includes("/complete");
+  const controller = isAiStep ? new AbortController() : null;
+  const timeoutId = controller
+    ? setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS)
+    : undefined;
+
   try {
-    return await fetch(url, init);
+    return await fetch(url, {
+      ...init,
+      signal: controller?.signal,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Network error";
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("Request timed out — the AI is taking too long. Please try again.");
+    }
     if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+      const onPreview =
+        typeof window !== "undefined" &&
+        window.location.hostname.includes("vercel.app") &&
+        !window.location.hostname.includes("hack2-hire-woad");
       throw new Error(
-        "Cannot reach the backend. Add your Railway URL to config/backend-url.txt (or VITE_API_URL on Vercel) and set CORS_ORIGIN on Railway.",
+        onPreview
+          ? "Cannot reach API on this preview URL. Open https://hack2-hire-woad.vercel.app or disable Vercel Deployment Protection for previews."
+          : "Cannot reach the backend. Check Railway is online and CORS_ORIGIN includes your site URL.",
       );
     }
     throw err;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 }
 
