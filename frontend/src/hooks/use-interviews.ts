@@ -10,7 +10,7 @@ async function apiFetch(url: string, init?: RequestInit) {
     const msg = err instanceof Error ? err.message : "Network error";
     if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
       throw new Error(
-        "Cannot reach the backend. Check VITE_API_URL on Vercel and CORS_ORIGIN on Railway, then redeploy both.",
+        "Cannot reach the backend. Add your Railway URL to config/backend-url.txt (or VITE_API_URL on Vercel) and set CORS_ORIGIN on Railway.",
       );
     }
     throw err;

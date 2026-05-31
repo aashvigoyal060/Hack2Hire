@@ -1,0 +1,3 @@
+# Paste your Railway public URL below (one line, no trailing slash).
+# Railway → Hack2Hire-Backend → Settings → Networking → Generate Domain
+# Example: https://hack2hire-backend-production-xxxx.up.railway.app

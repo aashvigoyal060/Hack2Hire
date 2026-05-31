@@ -1,29 +1,22 @@
-/** Backend base URL — required on Vercel (set VITE_API_URL in project env vars). */
+/**
+ * API base URL:
+ * - Dev: Vite proxy (`/api` → localhost:5000) when VITE_API_URL unset
+ * - Prod: `VITE_API_URL` from build, or same-origin `/api` (Vercel proxy → Railway)
+ */
 export function getApiBase(): string {
   const base = import.meta.env.VITE_API_URL?.trim() ?? "";
-  if (!base && import.meta.env.PROD) {
-    console.error(
-      "VITE_API_URL is not set. Add your Railway backend URL in Vercel → Settings → Environment Variables, then redeploy.",
-    );
-  }
-  return base.replace(/\/$/, "");
+  if (base) return base.replace(/\/$/, "");
+  return "";
 }
 
 export function apiUrl(path: string): string {
   const base = getApiBase();
-  if (!base) {
-    if (import.meta.env.PROD) {
-      throw new Error(
-        "Backend API URL is not configured. Set VITE_API_URL in Vercel to your Railway URL (e.g. https://xxx.up.railway.app), then redeploy.",
-      );
-    }
-    return path;
-  }
-  return `${base}${path}`;
+  return base ? `${base}${path}` : path;
 }
 
 export function isApiConfigured(): boolean {
-  return Boolean(getApiBase());
+  if (import.meta.env.DEV) return true;
+  return Boolean(getApiBase()) || import.meta.env.PROD;
 }
 
 export async function parseApiError(res: Response): Promise<string> {
@@ -35,7 +28,7 @@ export async function parseApiError(res: Response): Promise<string> {
     /* not json */
   }
   if (text.startsWith("<!DOCTYPE") || text.startsWith("<html")) {
-    return "API returned HTML instead of JSON — is VITE_API_URL set to your Railway backend?";
+    return "API returned HTML instead of JSON — check config/backend-url.txt or VITE_API_URL.";
   }
   return text.slice(0, 200) || res.statusText || "Request failed";
 }
