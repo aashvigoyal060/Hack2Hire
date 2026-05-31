@@ -1,5 +1,7 @@
+import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+import { initStorage } from "./storage";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
@@ -60,6 +62,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await initStorage();
+
+  if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+    console.warn(
+      "AI_INTEGRATIONS_OPENAI_API_KEY is not set — AI responses will use dev placeholders.",
+    );
+  }
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
@@ -90,14 +100,13 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
+  const host = process.env.HOST || "0.0.0.0";
+  const onListen = () => log(`serving on port ${port}`);
+
+  // reusePort is Linux/Replit-only; Windows throws ENOTSUP
+  if (process.platform === "win32") {
+    httpServer.listen(port, host, onListen);
+  } else {
+    httpServer.listen({ port, host, reusePort: true }, onListen);
+  }
 })();
