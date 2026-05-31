@@ -1,9 +1,0 @@
-node_modules
-dist
-.DS_Store
-.env
-*.local
-
-# Legacy monolith (use frontend/ and backend/ instead)
-client/node_modules
-server/node_modules
