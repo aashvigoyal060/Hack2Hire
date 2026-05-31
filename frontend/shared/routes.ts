@@ -1,5 +1,9 @@
-import { z } from 'zod';
-import { insertInterviewSchema, interviews, messages } from './schema';
+import { z } from "zod";
+import {
+  insertInterviewSchema,
+  interviewSchema,
+  messageSchema,
+} from "./types";
 
 export const errorSchemas = {
   validation: z.object({
@@ -17,60 +21,63 @@ export const errorSchemas = {
 export const api = {
   interviews: {
     list: {
-      method: 'GET' as const,
-      path: '/api/interviews',
+      method: "GET" as const,
+      path: "/api/interviews",
       responses: {
-        200: z.array(z.custom<typeof interviews.$inferSelect>()),
+        200: z.array(interviewSchema),
       },
     },
     create: {
-      method: 'POST' as const,
-      path: '/api/interviews',
+      method: "POST" as const,
+      path: "/api/interviews",
       input: insertInterviewSchema,
       responses: {
-        201: z.custom<typeof interviews.$inferSelect>(),
+        201: interviewSchema,
         400: errorSchemas.validation,
       },
     },
     get: {
-      method: 'GET' as const,
-      path: '/api/interviews/:id',
+      method: "GET" as const,
+      path: "/api/interviews/:id",
       responses: {
         200: z.object({
-          interview: z.custom<typeof interviews.$inferSelect>(),
-          messages: z.array(z.custom<typeof messages.$inferSelect>()),
+          interview: interviewSchema,
+          messages: z.array(messageSchema),
         }),
         404: errorSchemas.notFound,
       },
     },
     next: {
-      method: 'POST' as const,
-      path: '/api/interviews/:id/next',
+      method: "POST" as const,
+      path: "/api/interviews/:id/next",
       input: z.object({
-        userResponse: z.string().optional(), // Optional for the first start
-        timeTaken: z.number().optional(), // Time taken to answer in seconds
+        userResponse: z.string().optional(),
+        timeTaken: z.number().optional(),
       }),
       responses: {
         200: z.object({
-          message: z.custom<typeof messages.$inferSelect>(),
-          analysis: z.custom<typeof messages.$inferSelect>().optional(),
+          message: messageSchema,
+          analysis: messageSchema.optional(),
           isComplete: z.boolean().optional(),
         }),
         404: errorSchemas.notFound,
       },
     },
     complete: {
-      method: 'POST' as const,
-      path: '/api/interviews/:id/complete',
+      method: "POST" as const,
+      path: "/api/interviews/:id/complete",
       responses: {
-        200: z.custom<typeof interviews.$inferSelect>(),
+        200: interviewSchema,
         404: errorSchemas.notFound,
       },
     },
   },
 };
 
-export function buildUrl(path: string, params?: Record<string, string | number>): string {
+export function buildUrl(
+  path: string,
+  params?: Record<string, string | number>,
+): string {
   let url = path;
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
