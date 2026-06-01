@@ -16,7 +16,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import InterviewHistory from "@/components/interview-history";
-import ResumeAnalyzer from "@/components/resume-analyzer";
 import { Link } from "wouter";
 
 const formSchema = insertInterviewSchema;
@@ -24,7 +23,6 @@ const formSchema = insertInterviewSchema;
 const features = [
   { icon: Mic, title: "Voice Q&A", desc: "Hear questions aloud; answer with speech-to-text." },
   { icon: Timer, title: "Timed Questions", desc: "120-second countdown mimics real interview pressure." },
-  { icon: BarChart3, title: "ATS Resume Scan", desc: "Upload PDF for ATS score and interview readiness." },
   { icon: Target, title: "Quiz & LeetCode", desc: "Random tech quiz and coding problems by skillset." },
 ];
 
@@ -203,7 +201,7 @@ export default function LandingPage() {
                             />
                           </FormControl>
                           <FormDescription className="text-xs">
-                            Paste text or use PDF analyzer below to auto-fill.
+                            Paste your resume content here.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -254,33 +252,19 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Resume ATS */}
-      <section id="resume" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="grid lg:grid-cols-2 gap-8 items-start">
-          <ResumeAnalyzer
-            jobDescription={form.watch("jobDescription")}
-            onResumeText={(text, skills) => {
-              form.setValue("resumeText", text.slice(0, 8000));
-              if (skills.length) {
-                toast({
-                  title: "Skills detected",
-                  description: `${skills.slice(0, 6).join(", ")} — try Practice for quizzes.`,
-                });
-              }
-            }}
-          />
-          <Card className="glass-card border-border/60 h-full flex flex-col justify-center p-8">
-            <h3 className="text-xl font-display font-bold mb-2">Tech Quiz & LeetCode</h3>
-            <p className="text-muted-foreground text-sm mb-6">
-              Generate random MCQ quizzes and LeetCode-style problems from your skills — perfect warm-up before a mock interview.
-            </p>
-            <Link href="/practice">
-              <Button className="gap-2 bg-gradient-to-r from-primary to-accent">
-                Open Practice Hub <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </Card>
-        </div>
+      {/* Practice Hub */}
+      <section id="practice" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <Card className="glass-card border-border/60 p-8">
+          <h3 className="text-xl font-display font-bold mb-2">Tech Quiz & LeetCode</h3>
+          <p className="text-muted-foreground text-sm mb-6">
+            Generate random MCQ quizzes and LeetCode-style problems from your skills — perfect warm-up before a mock interview.
+          </p>
+          <Link href="/practice">
+            <Button className="gap-2 bg-gradient-to-r from-primary to-accent">
+              Open Practice Hub <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </Card>
       </section>
 
       {/* History */}
