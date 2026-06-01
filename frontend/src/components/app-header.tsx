@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Bot, History, Sparkles, GraduationCap } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import BackendStatus from "@/components/backend-status";
 import { cn } from "@/lib/utils";
 
 export function AppHeader() {
@@ -24,7 +25,8 @@ export function AppHeader() {
           </div>
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-2">
+          <BackendStatus />
           <Link
             href="/"
             className={cn(

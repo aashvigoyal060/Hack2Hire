@@ -15,10 +15,9 @@ const url = readBackendUrl().replace(/\/$/, "");
 const isValid = url.startsWith("https://");
 
 if (isValid) {
-  writeFileSync("frontend/.env.production", `VITE_API_URL=${url}\n`);
-  console.log("[deploy] VITE_API_URL from config/backend-url.txt");
+  console.log(`[deploy] Backend URL: ${url}`);
+  console.log("[deploy] Vercel serves /api via vercel.json rewrite → Railway");
+  console.log("[deploy] Optional: set VITE_API_URL on Vercel only for direct Railway calls");
 } else {
-  console.log(
-    "[deploy] config/backend-url.txt empty — frontend uses /api proxy (add Railway URL to that file)",
-  );
+  console.warn("[deploy] Add Railway URL to config/backend-url.txt and vercel.json rewrites");
 }
