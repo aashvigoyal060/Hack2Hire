@@ -67,3 +67,33 @@ export function useLeetcodePractice() {
     },
   });
 }
+
+export function useEnglishAptitude() {
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch(apiUrl(api.practice.english.path), {
+        method: api.practice.english.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (!res.ok) throw new Error(await parseApiError(res));
+      const json = await res.json();
+      return api.practice.english.responses[200].parse(json) as { questions: QuizQuestion[] };
+    },
+  });
+}
+
+export function useMathAptitude() {
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch(apiUrl(api.practice.math.path), {
+        method: api.practice.math.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (!res.ok) throw new Error(await parseApiError(res));
+      const json = await res.json();
+      return api.practice.math.responses[200].parse(json) as { questions: QuizQuestion[] };
+    },
+  });
+}

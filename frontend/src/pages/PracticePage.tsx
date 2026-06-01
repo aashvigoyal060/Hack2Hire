@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useLeetcodePractice, useTechQuiz } from "@/hooks/use-features";
+import { useLeetcodePractice, useTechQuiz, useEnglishAptitude, useMathAptitude } from "@/hooks/use-features";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Brain, Code2, Loader2, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Brain, Code2, Loader2, ExternalLink, CheckCircle2, BookOpen, Calculator } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { QuizQuestion, LeetcodeProblem } from "@shared/types";
 import { cn } from "@/lib/utils";
@@ -25,11 +25,15 @@ export default function PracticePage() {
   const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard" | "Mixed">("Mixed");
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [leetcodeProblems, setLeetcodeProblems] = useState<LeetcodeProblem[]>([]);
+  const [englishQuestions, setEnglishQuestions] = useState<QuizQuestion[]>([]);
+  const [mathQuestions, setMathQuestions] = useState<QuizQuestion[]>([]);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
 
   const quiz = useTechQuiz();
   const leetcode = useLeetcodePractice();
+  const english = useEnglishAptitude();
+  const math = useMathAptitude();
   const { toast } = useToast();
 
   const skillList = skills.split(/[,;]+/).map((s) => s.trim()).filter(Boolean);
@@ -59,6 +63,28 @@ export default function PracticePage() {
     );
   };
 
+  const generateEnglish = () => {
+    english.mutate(undefined, {
+      onSuccess: (data) => {
+        setEnglishQuestions(data.questions);
+        setSelectedAnswers({});
+        setRevealed({});
+      },
+      onError: (e) => toast({ variant: "destructive", title: "English aptitude failed", description: e.message }),
+    });
+  };
+
+  const generateMath = () => {
+    math.mutate(undefined, {
+      onSuccess: (data) => {
+        setMathQuestions(data.questions);
+        setSelectedAnswers({});
+        setRevealed({});
+      },
+      onError: (e) => toast({ variant: "destructive", title: "Math aptitude failed", description: e.message }),
+    });
+  };
+
   return (
     <div className="relative overflow-hidden">
       <div className="absolute inset-0 -z-10 mesh-gradient" />
@@ -66,7 +92,7 @@ export default function PracticePage() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-4xl font-display font-bold mb-2">Skill Practice</h1>
           <p className="text-muted-foreground">
-            Random tech quizzes and LeetCode-style problems based on your skillset.
+            Random tech quizzes, LeetCode-style problems, and aptitude questions.
           </p>
         </motion.div>
 
@@ -92,12 +118,18 @@ export default function PracticePage() {
         </Card>
 
         <Tabs defaultValue="quiz" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="quiz" className="gap-2">
               <Brain className="w-4 h-4" /> Tech Quiz
             </TabsTrigger>
             <TabsTrigger value="leetcode" className="gap-2">
               <Code2 className="w-4 h-4" /> LeetCode Practice
+            </TabsTrigger>
+            <TabsTrigger value="english" className="gap-2">
+              <BookOpen className="w-4 h-4" /> English Aptitude
+            </TabsTrigger>
+            <TabsTrigger value="math" className="gap-2">
+              <Calculator className="w-4 h-4" /> Math Aptitude
             </TabsTrigger>
           </TabsList>
 
@@ -202,6 +234,100 @@ export default function PracticePage() {
                     >
                       Open on LeetCode <ExternalLink className="w-3 h-3" />
                     </a>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="english" className="space-y-4">
+            <Button onClick={generateEnglish} disabled={english.isPending} className="gap-2">
+              {english.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
+              Generate English aptitude questions
+            </Button>
+            {englishQuestions.map((q) => (
+              <Card key={q.id} className="glass-card">
+                <CardHeader className="pb-2">
+                  <Badge variant="secondary" className="w-fit">{q.topic}</Badge>
+                  <CardTitle className="text-base font-medium leading-snug">{q.question}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {q.options.map((opt, idx) => {
+                    const selected = selectedAnswers[q.id] === idx;
+                    const showResult = revealed[q.id];
+                    const isCorrect = q.correctIndex === idx;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setSelectedAnswers((prev) => ({ ...prev, [q.id]: idx }));
+                          setRevealed((prev) => ({ ...prev, [q.id]: true }));
+                        }}
+                        className={cn(
+                          "w-full text-left p-3 rounded-xl border text-sm transition-colors",
+                          showResult && isCorrect && "border-green-500/50 bg-green-500/10",
+                          showResult && selected && !isCorrect && "border-destructive/50 bg-destructive/10",
+                          !showResult && selected && "border-primary bg-primary/10",
+                          !showResult && !selected && "border-border hover:bg-muted/50",
+                        )}
+                      >
+                        {opt}
+                        {showResult && isCorrect && (
+                          <CheckCircle2 className="w-4 h-4 inline ml-2 text-green-500" />
+                        )}
+                      </button>
+                    );
+                  })}
+                  {revealed[q.id] && (
+                    <p className="text-sm text-muted-foreground pt-2 border-t">{q.explanation}</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="math" className="space-y-4">
+            <Button onClick={generateMath} disabled={math.isPending} className="gap-2">
+              {math.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calculator className="w-4 h-4" />}
+              Generate Math aptitude questions
+            </Button>
+            {mathQuestions.map((q) => (
+              <Card key={q.id} className="glass-card">
+                <CardHeader className="pb-2">
+                  <Badge variant="secondary" className="w-fit">{q.topic}</Badge>
+                  <CardTitle className="text-base font-medium leading-snug">{q.question}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {q.options.map((opt, idx) => {
+                    const selected = selectedAnswers[q.id] === idx;
+                    const showResult = revealed[q.id];
+                    const isCorrect = q.correctIndex === idx;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setSelectedAnswers((prev) => ({ ...prev, [q.id]: idx }));
+                          setRevealed((prev) => ({ ...prev, [q.id]: true }));
+                        }}
+                        className={cn(
+                          "w-full text-left p-3 rounded-xl border text-sm transition-colors",
+                          showResult && isCorrect && "border-green-500/50 bg-green-500/10",
+                          showResult && selected && !isCorrect && "border-destructive/50 bg-destructive/10",
+                          !showResult && selected && "border-primary bg-primary/10",
+                          !showResult && !selected && "border-border hover:bg-muted/50",
+                        )}
+                      >
+                        {opt}
+                        {showResult && isCorrect && (
+                          <CheckCircle2 className="w-4 h-4 inline ml-2 text-green-500" />
+                        )}
+                      </button>
+                    );
+                  })}
+                  {revealed[q.id] && (
+                    <p className="text-sm text-muted-foreground pt-2 border-t">{q.explanation}</p>
                   )}
                 </CardContent>
               </Card>

@@ -114,6 +114,20 @@ export const api = {
         200: z.object({ problems: z.array(leetcodeProblemSchema) }),
       },
     },
+    english: {
+      method: "POST" as const,
+      path: "/api/practice/english",
+      responses: {
+        200: z.object({ questions: z.array(quizQuestionSchema) }),
+      },
+    },
+    math: {
+      method: "POST" as const,
+      path: "/api/practice/math",
+      responses: {
+        200: z.object({ questions: z.array(quizQuestionSchema) }),
+      },
+    },
   },
 };
 
